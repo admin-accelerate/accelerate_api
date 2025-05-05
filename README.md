@@ -62,7 +62,7 @@ Pour les tests :
 ## Installation
 1. **Clone the repository**:
    ```bash
-   git clone (https://github.com/djamioufadebi/accelerate_api.git)
+   git clone https://github.com/admin-accelerate/accelerate_api.git
    cd accelerate_api
    ```
 
