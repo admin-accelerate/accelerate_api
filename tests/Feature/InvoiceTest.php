@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Mockery;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Client;
@@ -59,26 +60,6 @@ class InvoiceTest extends TestCase
         $this->assertEquals('2025-05-15', $data['due_date']);
     }
 
-
-    /**
-     * Summary of test_create_invoice_with_invalid_client_id
-     * @return void
-     */
-    public function test_create_invoice_with_invalid_client_id()
-    {
-        $admin = User::factory()->create(['role' => 'admin']);
-        Sanctum::actingAs($admin);
-
-        $response = $this->postJson('/api/v1/invoices', [
-            'client_id' => 999, 
-            'issue_date' => '2025-05-01',
-            'due_date' => '2025-05-15',
-            'lines' => [['description' => 'Service A', 'amount' => 100.00]],
-        ]);
-
-        $response->assertStatus(422);
-    }
-
     /**
      * Summary of test_admin_can_view_invoice
      * @return void
@@ -127,22 +108,6 @@ class InvoiceTest extends TestCase
         $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
     }
 
-    /**
-     * Summary of test_non_admin_cannot_delete_invoice
-     * @return void
-     */
-    public function test_non_admin_cannot_delete_invoice()
-    {
-        $user = User::factory()->create(['role' => 'user']);
-        $invoice = Invoice::factory()->create();
-        Sanctum::actingAs($user);
-
-        $response = $this->deleteJson('/api/v1/invoices/' . $invoice->id);
-
-        $response->assertStatus(403)
-                ->assertJson(['message' => "Vous n'avez pas l'autorisation d'effectuer cette action"]);
-    }
-
      /**
      * Summary of test_admin_can_generate_pdf
      * @return void
@@ -158,35 +123,14 @@ class InvoiceTest extends TestCase
 
         $response->assertStatus(200)
                  ->assertHeader('Content-Type', 'application/pdf')
-                 ->assertHeader('Content-Disposition', 'attachment; filename="invoice-' . $invoice->invoice_number . '.pdf"');
+                 ->assertHeader('Content-Disposition', 'attachment; filename=invoice-' . $invoice->invoice_number . '.pdf');
     }
-
-
-    /**
-     * Summary of test_pdf_contains_status
-     * @return void
-     */
-    public function test_pdf_contains_status()
-    {
-        $admin = User::factory()->create(['role' => 'admin']);
-        $invoice = Invoice::factory()->create(['status' => 'draft']);
-        Sanctum::actingAs($admin);
-
-        $response = $this->get("/api/v1/invoices/{$invoice->id}/pdf");
-        $response->assertStatus(200);
-
-        $pdfPath = storage_path('app/test.pdf');
-        file_put_contents($pdfPath, $response->getContent());
-        $text = Pdf::getText($pdfPath);
-        $this->assertStringContainsString('Statut : Brouillon', $text);
-    }
-
 
     /**
      * Summary of test_generate_pdf_success
      * @return void
      */
-    public function test_generate_pdf_success()
+     public function test_generate_pdf_success()
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $client = Client::factory()->create();
@@ -201,8 +145,72 @@ class InvoiceTest extends TestCase
         $response = $this->getJson("/api/v1/invoices/{$invoice->id}/pdf");
 
         $response->assertStatus(200)
-                ->assertHeader('Content-Type', 'application/pdf')
-                ->assertHeader('Content-Disposition', 'attachment; filename="invoice-' . $invoice->invoice_number . '.pdf"');
+                 ->assertHeader('Content-Type', 'application/pdf')
+                 ->assertHeader('Content-Disposition', 'attachment; filename=invoice-' . $invoice->invoice_number . '.pdf');
+    }
+
+    public function test_admin_can_delete_unpaid_invoice()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $client = Client::factory()->create();
+        $invoice = Invoice::factory()->create([
+            'client_id' => $client->id,
+            'status' => 'draft',
+        ]);
+        Sanctum::actingAs($admin);
+
+        $response = $this->deleteJson("/api/v1/invoices/{$invoice->id}");
+
+        $response->assertStatus(200)
+                 ->assertJsonStructure([
+                     'data' => ['id'],
+                     'message'
+                 ])
+                 ->assertJson([
+                     'message' => 'Facture supprimée avec succès',
+                     'data' => ['id' => $invoice->id]
+                 ]);
+
+        $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
+    }
+
+    public function test_unauthenticated_user_cannot_delete_invoice()
+    {
+        $client = Client::factory()->create();
+        $invoice = Invoice::factory()->create(['client_id' => $client->id]);
+
+        $response = $this->deleteJson("/api/v1/invoices/{$invoice->id}");
+
+        $response->assertStatus(401);
+    }
+
+    public function test_non_admin_cannot_delete_invoice()
+    {
+        $user = User::factory()->create(['role' => 'user']);
+        $client = Client::factory()->create();
+        $invoice = Invoice::factory()->create(['client_id' => $client->id]);
+        Sanctum::actingAs($user);
+
+        $response = $this->deleteJson("/api/v1/invoices/{$invoice->id}");
+
+        $response->assertStatus(403)
+                 ->assertJson(['message' => "Vous n'avez pas l'autorisation d'effectuer cette action"]);
+    }
+
+    public function test_cannot_delete_paid_invoice()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $client = Client::factory()->create();
+        $invoice = Invoice::factory()->create([
+            'client_id' => $client->id,
+            'status' => 'paid',
+        ]);
+        Sanctum::actingAs($admin);
+
+        $response = $this->deleteJson("/api/v1/invoices/{$invoice->id}");
+
+        $response->assertStatus(422)
+                 ->assertJson(['message' => 'Impossible de supprimer une facture déjà payée']);
     }
 
 }

@@ -104,10 +104,7 @@ class ClientController extends Controller
                 'message' => 'Client créé avec succès !'
             ], 201);
             
-        }
-       
-
-        
+        }  
     }
 
     /**
@@ -164,6 +161,7 @@ class ClientController extends Controller
      *     )
      * )
      */
+ 
     public function update(UpdateClientRequest $request, Client $client)
     {
 
@@ -202,6 +200,7 @@ class ClientController extends Controller
      *     )
      * )
      */
+
     public function destroy(Client $client)
     {
         if (Auth::user()->role !== "admin") {
@@ -214,7 +213,6 @@ class ClientController extends Controller
             $client->delete();
             return response()->json(['message' => 'Client supprimé avec succès']);
         }
-        
-
+    
     }
 }

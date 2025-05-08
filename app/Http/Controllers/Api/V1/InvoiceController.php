@@ -268,7 +268,7 @@ use App\Http\Requests\StoreInvoiceRequest;
      *     )
      * )
      */
-     public function show(Invoice $invoice)
+    public function show(Invoice $invoice)
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return response()->json([
