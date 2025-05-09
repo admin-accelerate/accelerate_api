@@ -29,7 +29,7 @@ pipeline {
             echo 'Pipeline finished'
         }
         failure {
-            mail to: 'malco@example.com',
+            mail to: 'djamioufadebi@gmail.com',
                  subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "Check ${env.BUILD_URL}"
         }
