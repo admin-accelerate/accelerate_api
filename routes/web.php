@@ -13,6 +13,13 @@ Route::get('/test-pdf', function () {
     return $pdf->download('test.pdf');
 });
 
+Route::middleware('admin')->group(function () {
+    Route::get('/test-pdf-invoice/{invoice}', function (Invoice $invoice) {
+        $pdf = PDF::loadView('pdf.invoice', ['invoice' => $invoice->load(['client', 'lines'])]);
+        return $pdf->download('invoice.pdf');
+    });
+});
+
 Route::get('/test-invoice-view/{invoice}', function (Invoice $invoice) {
     return view('pdf.invoice', ['invoice' => $invoice->load(['client', 'lines'])]);
 });

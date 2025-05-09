@@ -1,10 +1,14 @@
 openapi: 3.0.3
+info:
+  title: Accelerate API
+  version: 1.0.0
+  description: API documentation for the Accelerate project
 components:
   securitySchemes:
-    bearerAuth:
+    sanctumAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      description: Laravel Sanctum API token authentication
   schemas:
     Invoice:
       type: object
@@ -99,3 +103,124 @@ components:
               type: string
       required:
         - message
+paths:
+  /api/v1/clients/{id}:
+    put:
+      summary: Update a client
+      description: Updates an existing client. Only accessible to admin users.
+      operationId: updateClient
+      tags:
+        - Clients
+      security:
+        - sanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the client to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Jane Doe
+                email:
+                  type: string
+                  format: email
+                  example: jane@example.com
+                phone:
+                  type: string
+                  example: 0987654321
+                address:
+                  type: string
+                  example: 456 St Michel
+              required:
+                - name
+                - email
+      responses:
+        '201':
+          description: Client updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  client:
+                    $ref: '#/components/schemas/Client'
+                  message:
+                    type: string
+                    example: Client mise à jour avec succès !
+        '401':
+          description: Unauthorized - User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Unauthenticated
+        '403':
+          description: Forbidden - User not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Vous n'avez l'autorisation d'effectuer cette action
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: The given data was invalid.
+                errors:
+                  email: [The email field is required.]
+    delete:
+      summary: Delete a client
+      description: Deletes an existing client. Only accessible to admin users.
+      operationId: deleteClient
+      tags:
+        - Clients
+      security:
+        - sanctumAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the client to delete
+      responses:
+        '200':
+          description: Client deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Client supprimé avec succès
+        '401':
+          description: Unauthorized - User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Unauthenticated
+        '403':
+          description: Forbidden - User not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Vous n'avez l'autorisation d'effectuer cette action

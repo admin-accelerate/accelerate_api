@@ -185,7 +185,7 @@
                 },
                 "security": [
                     {
-                        "Sanctum": []
+                        "sanctum": []
                     }
                 ]
             },
@@ -244,7 +244,7 @@
                 },
                 "security": [
                     {
-                        "Sanctum": []
+                        "sanctum": []
                     }
                 ]
             }
@@ -280,7 +280,7 @@
                 },
                 "security": [
                     {
-                        "Sanctum": []
+                        "sanctum": []
                     }
                 ]
             },
@@ -349,7 +349,7 @@
                 },
                 "security": [
                     {
-                        "Sanctum": []
+                        "sanctum": []
                     }
                 ]
             },
@@ -363,6 +363,7 @@
                     {
                         "name": "id",
                         "in": "path",
+                        "description": "Client ID",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -370,13 +371,19 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "Client deleted"
+                    "200": {
+                        "description": "Client deleted successfully"
+                    },
+                    "403": {
+                        "description": "Not authorized"
+                    },
+                    "404": {
+                        "description": "Client not found"
                     }
                 },
                 "security": [
                     {
-                        "Sanctum": []
+                        "sanctum": []
                     }
                 ]
             }
@@ -1163,12 +1170,6 @@
             }
         },
         "securitySchemes": {
-            "bearerAuth": {
-                "type": "http",
-                "description": "Use a Sanctum token obtained from /api/v1/login",
-                "bearerFormat": "JWT",
-                "scheme": "bearer"
-            },
             "sanctum": {
                 "type": "apiKey",
                 "description": "Enter token in format: Bearer {token}",

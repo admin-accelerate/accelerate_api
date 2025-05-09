@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\V1\InvoiceController;
 
 Route::prefix('v1')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth:sanctum', 'admin')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::apiResource("users", UserController::class);
         Route::apiResource('clients', ClientController::class);

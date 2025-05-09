@@ -30,7 +30,7 @@ class ClientController extends Controller
      *     path="/api/v1/clients",
      *     tags={"Clients"},
      *     summary="List all clients",
-     *     security={{"Sanctum":{}}},
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
@@ -69,7 +69,7 @@ class ClientController extends Controller
      *     path="/api/v1/clients",
      *     tags={"Clients"},
      *     summary="Create a new client",
-     *     security={{"Sanctum":{}}},
+     *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -112,7 +112,7 @@ class ClientController extends Controller
      *     path="/api/v1/clients/{id}",
      *     tags={"Clients"},
      *     summary="Get a client by ID",
-     *     security={{"Sanctum":{}}},
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -137,7 +137,7 @@ class ClientController extends Controller
      *     path="/api/v1/clients/{id}",
      *     tags={"Clients"},
      *     summary="Update a client",
-     *     security={{"Sanctum":{}}},
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -171,48 +171,58 @@ class ClientController extends Controller
                 "Vous n'avez l'autorisation d'éffectuer cette action"], 
                 403);
         }
-        else {
+      
 
-           $client->update($request->validated());
+        $client->update($request->validated());
 
-            return response()->json([
+        return response()->json([
                 'client' =>  new ClientResource($client),
                 'message' => 'Client mise à jour avec succès !'
-            ], 201);
-        }
+        ], 201);
+        
     }
 
     /**
-     * @OA\Delete(
-     *     path="/api/v1/clients/{id}",
-     *     tags={"Clients"},
-     *     summary="Delete a client",
-     *     security={{"Sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\Response(
-     *         response=204,
-     *         description="Client deleted"
-     *     )
-     * )
-     */
+    * @OA\Delete(
+    *     path="/api/v1/clients/{id}",
+    *     summary="Delete a client",
+    *     tags={"Clients"},
+    *     security={{"sanctum":{}}},
+    *     @OA\Parameter(
+    *         name="id",
+    *         in="path",
+    *         description="Client ID",
+    *         required=true,
+    *         @OA\Schema(type="integer")
+    *     ),
+    *     @OA\Response(
+    *         response=200,
+    *         description="Client deleted successfully"
+    *     ),
+    *     @OA\Response(
+    *         response=403,
+    *         description="Not authorized"
+    *     ),
+    *     @OA\Response(
+    *         response=404,
+    *         description="Client not found"
+    *     )
+    * )
+    */
 
     public function destroy(Client $client)
     {
-        if (Auth::user()->role !== "admin") {
+         $user = auth()->user();
+        // Check if the authenticated user is an admin
+        if (!$user || $user->role !== 'admin') {
             return response()->json([
-                'message' => 
-                "Vous n'avez l'autorisation d'éffectuer cette action"], 
-                403);
+            'message' => 
+            "Vous n'avez l'autorisation d'éffectuer cette action"], 
+            403);
         }
-        else {
-            $client->delete();
-            return response()->json(['message' => 'Client supprimé avec succès']);
-        }
-    
+       // delete the client
+        $client->delete();
+        return response()->json(['message' => 'Client supprimé avec succès']);
+        
     }
 }

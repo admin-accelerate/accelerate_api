@@ -20,13 +20,6 @@ use App\Http\Requests\StoreInvoiceRequest;
  *     name="Invoices",
  *     description="API endpoints for managing invoices"
  * )
- * @OA\SecurityScheme(
- *     securityScheme="bearerAuth",
- *     type="http",
- *     scheme="bearer",
- *     bearerFormat="JWT",
- *     description="Use a Sanctum token obtained from /api/v1/login"
- * )
  * @OA\Schema(
  *     schema="Invoice",
  *     type="object",
