@@ -46,7 +46,7 @@ use App\Http\Requests\StoreInvoiceRequest;
  *     @OA\Property(property="amount", type="number", format="float", example=100.00)
  * )
  */
- class InvoiceController extends Controller
+class InvoiceController extends Controller
 {
 
     /**
@@ -118,7 +118,7 @@ use App\Http\Requests\StoreInvoiceRequest;
         return InvoiceResource::collection($query->paginate(10));
     }
 
-     /**
+    /**
      * @OA\Post(
      *     path="/api/v1/invoices",
      *     tags={"Invoices"},
@@ -137,7 +137,8 @@ use App\Http\Requests\StoreInvoiceRequest;
      *                 type="array",
      *                 @OA\Items(
      *                     @OA\Property(property="description", type="string", example="Service A"),
-     *                     @OA\Property(property="amount", type="number", format="float", example=100.00)
+     *                     @OA\Property(property="quantity", type="integer", example=2),
+     *                     @OA\Property(property="unit_price", type="number", format="float", example=50.00)
      *                 )
      *             ),
      *             required={"client_id", "issue_date", "due_date", "lines"}
@@ -169,12 +170,19 @@ use App\Http\Requests\StoreInvoiceRequest;
      *                 @OA\Property(property="client_id", type="array", @OA\Items(type="string", example="The selected client id is invalid."))
      *             )
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Une erreur est survenue lors de la création de la facture.")
+     *         )
      *     )
      * )
      */
     public function store(StoreInvoiceRequest $request)
     {
-        // Vérifier l'authentification et le rôle admin
+        // Vérification des permissions
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return response()->json([
                 'message' => "Vous n'avez pas l'autorisation d'effectuer cette action"
@@ -183,33 +191,44 @@ use App\Http\Requests\StoreInvoiceRequest;
 
         try {
             return DB::transaction(function () use ($request) {
-                // Créer la facture
+                // Générer un numéro de facture unique
+                $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad(Invoice::count() + 1, 4, '0', STR_PAD_LEFT);
+
+                // Créer la facture avec total_ht initial à 0 (recalculé via le modèle)
                 $invoice = Invoice::create([
                     'client_id' => $request->client_id,
-                    'invoice_number' => 'INV-' . date('Y') . '-' . str_pad(Invoice::count() + 1, 4, '0', STR_PAD_LEFT),
+                    'invoice_number' => $invoiceNumber,
                     'issue_date' => $request->issue_date,
                     'due_date' => $request->due_date,
-                    'total_ht' => collect($request->lines)->sum('amount'),
                     'status' => 'draft',
+                    // Recalculé automatiquement par le modèle
+                    'total_ht' => 0,
                 ]);
 
                 // Créer les lignes de facture
                 foreach ($request->lines as $line) {
-                    InvoiceLine::create([
-                        'invoice_id' => $invoice->id,
+                    $invoice->lines()->create([
                         'description' => $line['description'],
-                        'amount' => $line['amount'],
+                        'quantity' => $line['quantity'],
+                        'unit_price' => $line['unit_price'],
                     ]);
                 }
 
-                // Retourner une réponse standardisée
+                // Forcer le recalcul de total_ht après la création des lignes
+                $invoice->total_ht = $invoice->lines()->sum('total_amount');
+                // Déclenche l'événement  
+                $invoice->save();
+
+                // Recharger l'invoice pour refléter le total_ht recalculé
+                $invoice->load(['client', 'lines']);
+
                 return response()->json([
-                    'data' => new InvoiceResource($invoice->load(['client', 'lines'])),
-                    'message' => 'Facture créée avec succès !'
+                    'data' => new InvoiceResource($invoice),
+                    'message' => 'Facture créée avec succès !',
                 ], 201);
             });
         } catch (Exception $e) {
-            // Journaliser l'erreur
+            // Journaliser l'erreur avec les détails
             Log::error('Erreur lors de la création de la facture : ' . $e->getMessage(), [
                 'request' => $request->all(),
                 'user_id' => Auth::id(),
@@ -220,8 +239,7 @@ use App\Http\Requests\StoreInvoiceRequest;
             ], 500);
         }
     }
-    
- 
+
     /**
      * @OA\Get(
      *     path="/api/v1/invoices/{id}",
@@ -282,6 +300,124 @@ use App\Http\Requests\StoreInvoiceRequest;
 
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la récupération de la facture'
+            ], 500);
+        }
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/v1/invoices/{id}",
+     *     tags={"Invoices"},
+     *     summary="Update a specific invoice",
+     *     description="Update details of a specific invoice. Restricted to admin users.",
+     *     operationId="updateInvoice",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Invoice ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="client_id", type="integer", example=1),
+     *             @OA\Property(property="issue_date", type="string", format="date", example="2025-05-01"),
+     *             @OA\Property(property="due_date", type="string", format="date", example="2025-05-15"),
+     *             @OA\Property(
+     *                 property="lines",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="description", type="string", example="Service A"),
+     *                     @OA\Property(property="quantity", type="integer", example=2),
+     *                     @OA\Property(property="unit_price", type="number", format="float", example=50.00)
+     *                 )
+     *             ),
+     *             required={"client_id", "issue_date", "due_date"}
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Invoice updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", ref="#/components/schemas/Invoice"),
+     *             @OA\Property(property="message", type="string", example="Facture mise à jour avec succès")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Vous n'avez pas l'autorisation d'effectuer cette action")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invoice not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="No query results for model [App\Models\Invoice] {id}")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 @OA\Property(property="client_id", type="array", @OA\Items(type="string", example="The selected client id is invalid."))
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function update(StoreInvoiceRequest $request, Invoice $invoice)
+    {
+        if (!Auth::check() || Auth::user()->role !== 'admin') {
+            return response()->json([
+                'message' => "Vous n'avez pas l'autorisation d'effectuer cette action"
+            ], 403);
+        }
+
+        try {
+            DB::transaction(function () use ($request, $invoice) {
+                $invoice->update([
+                    'client_id' => $request->client_id,
+                    'issue_date' => $request->issue_date,
+                    'due_date' => $request->due_date,
+                ]);
+
+                // Mettre à jour les lignes de facture
+                foreach ($request->lines as $line) {
+                    InvoiceLine::updateOrCreate(
+                        ['id' => $line['id'] ?? null],
+                        [
+                            'invoice_id' => $invoice->id,
+                            'description' => $line['description'],
+                            'quantity' => $line['quantity'],
+                            'unit_price' => $line['unit_price'],
+                        ]
+                    );
+                }
+
+                // Recharger l'invoice pour refléter le total_ht recalculé
+                $invoice->load(['client', 'lines']);
+            });
+
+            return response()->json([
+                'data' => new InvoiceResource($invoice),
+                'message' => 'Facture mise à jour avec succès'
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('Erreur lors de la mise à jour de la facture : ' . $e->getMessage(), [
+                'invoice_id' => $invoice->id,
+                'user_id' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'message' => 'Une erreur est survenue lors de la mise à jour de la facture'
             ], 500);
         }
     }
@@ -377,7 +513,7 @@ use App\Http\Requests\StoreInvoiceRequest;
             ], 500);
         }
     }
-    
+
     /**
      * @OA\Get(
      *     path="/api/v1/invoices/{id}/pdf",
@@ -550,5 +686,4 @@ use App\Http\Requests\StoreInvoiceRequest;
 
         return InvoiceResource::collection($query->orderBy('issue_date', 'desc')->paginate(10));
     }
-    
 }

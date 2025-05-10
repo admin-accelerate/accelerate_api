@@ -15,7 +15,7 @@ class StoreInvoiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::user()->role === 'admin';
+        return Auth::check() && Auth::user()->role === 'admin';
     }
 
     /**
@@ -31,12 +31,14 @@ class StoreInvoiceRequest extends FormRequest
             'due_date' => 'required|date|after_or_equal:issue_date',
             'lines' => 'required|array|min:1',
             'lines.*.description' => 'required|string|max:255',
-            'lines.*.amount' => 'required|numeric|min:0',
+            'lines.*.quantity' => 'required|integer|min:1',
+            'lines.*.unit_price' => 'required|numeric|min:0',
             'status' => '',
         ];
     }
 
-    public function failedValidation(Validator $validator){
+    public function failedValidation(Validator $validator)
+    {
         throw new HttpResponseException(response()->json([
             'success' => false,
             'error' => true,
@@ -45,10 +47,11 @@ class StoreInvoiceRequest extends FormRequest
         ]));
     }
 
-
     public function messages()
     {
         return [
+            'lines.*.quantity.min' => 'La quantité doit être supérieure à 0.',
+            'lines.*.unit_price.min' => 'Le prix unitaire ne peut pas être négatif.',
             'client_id.required' => 'Le client est requis.',
             'client_id.exists' => 'Le client spécifié n’existe pas.',
             'issue_date.before_or_equal' => 'La date d’émission doit être aujourd’hui ou antérieure.',
@@ -56,6 +59,4 @@ class StoreInvoiceRequest extends FormRequest
             'lines.min' => 'Au moins une ligne de facture est requise.',
         ];
     }
-
-    
 }

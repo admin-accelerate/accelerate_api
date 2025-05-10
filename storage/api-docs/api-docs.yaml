@@ -82,14 +82,23 @@ components:
         description:
           type: string
           example: Service A
-        amount:
+        quantity:
+          type: integer
+          example: 2
+        unit_price:
+          type: number
+          format: float
+          example: 50.00
+        total_amount:
           type: number
           format: float
           example: 100.00
       required:
         - id
         - description
-        - amount
+        - quantity
+        - unit_price
+        - total_amount
     Error:
       type: object
       properties:

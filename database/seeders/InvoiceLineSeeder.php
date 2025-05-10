@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Invoice;
+use App\Models\InvoiceLine;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class InvoiceLineSeeder extends Seeder
 {
@@ -12,6 +14,11 @@ class InvoiceLineSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        // Créer 10 lignes de facture fictives
+        InvoiceLine::factory()
+            ->count(5)
+            ->create([
+                'invoice_id' => Invoice::factory()->create()->id,
+            ]);
     }
 }

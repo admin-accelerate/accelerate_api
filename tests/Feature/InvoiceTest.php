@@ -21,7 +21,7 @@ class InvoiceTest extends TestCase
      * Summary of test_admin_can_create_invoice
      * @return void
      */
-    public function test_admin_can_create_invoice()
+    /*public function test_admin_can_create_invoice()
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $client = Client::factory()->create();
@@ -40,6 +40,85 @@ class InvoiceTest extends TestCase
         $response->assertStatus(201)
                  ->assertJsonStructure(['data' => ['id', 'client', 'invoice_number', 'total_ht', 'lines']])
                  ->assertJsonFragment(['total_ht' => 300.00]);
+    }*/
+
+    /**
+     * Summary of test_admin_can_create_invoice
+     * @return void
+     */
+    public function test_admin_can_create_invoice()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $client = Client::factory()->create();
+        Sanctum::actingAs($admin);
+
+        $response = $this->postJson('/api/v1/invoices', [
+            'client_id' => $client->id,
+            'invoice_number' => 'INV-2025-0002',
+            'issue_date' => '2025-05-01',
+            'due_date' => '2025-05-15',
+            'status' => 'draft',
+            'lines' => [
+                [
+                    'description' => 'Service A',
+                    'quantity' => 2,
+                    'unit_price' => 500.00,
+                ],
+                [
+                    'description' => 'Service B',
+                    'quantity' => 3,
+                    'unit_price' => 400.00,
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'invoice' => [
+                    'id',
+                    'client' => ['id', 'name', 'email'],
+                    'invoice_number',
+                    'total_ht',
+                    'issue_date',
+                    'due_date',
+                    'status',
+                    'lines' => [
+                        '*' => ['id', 'description', 'quantity', 'unit_price', 'total_amount']
+                    ],
+                ],
+                'message',
+            ])
+            ->assertJsonFragment(['total_ht' => 200.00]); // (2 * 50) + (1 * 100) = 200
+    }
+
+
+    /**
+     * Summary of test_validation_fails_with_invalid_line_data
+     * @return void
+     */
+    public function test_validation_fails_with_invalid_line_data()
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $client = Client::factory()->create();
+        Sanctum::actingAs($admin);
+
+        $response = $this->postJson('/api/v1/invoices', [
+            'client_id' => $client->id,
+            'invoice_number' => 'INV-2025-0003',
+            'issue_date' => '2025-05-01',
+            'due_date' => '2025-05-15',
+            'status' => 'draft',
+            'lines' => [
+                [
+                    'description' => 'Service A',
+                    'quantity' => 0, // Invalide
+                    'unit_price' => -50.00, // Invalide
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['lines.0.quantity', 'lines.0.unit_price']);
     }
 
     /**
@@ -73,18 +152,18 @@ class InvoiceTest extends TestCase
         $response = $this->getJson('/api/v1/invoices/' . $invoice->id);
 
         $response->assertStatus(200)
-                ->assertJsonStructure([
-                    'data' => [
-                        'id',
-                        'client',
-                        'invoice_number',
-                        'total_ht',
-                        'issue_date',
-                        'due_date',
-                        'lines',
-                    ],
-                    'message',
-                ]);
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'client',
+                    'invoice_number',
+                    'total_ht',
+                    'issue_date',
+                    'due_date',
+                    'lines',
+                ],
+                'message',
+            ]);
     }
 
     /**
@@ -100,15 +179,15 @@ class InvoiceTest extends TestCase
         $response = $this->deleteJson('/api/v1/invoices/' . $invoice->id);
 
         $response->assertStatus(200)
-                ->assertJson([
-                    'message' => 'Facture supprimée avec succès',
-                    'data' => ['id' => $invoice->id],
-                ]);
+            ->assertJson([
+                'message' => 'Facture supprimée avec succès',
+                'data' => ['id' => $invoice->id],
+            ]);
 
         $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
     }
 
-     /**
+    /**
      * Summary of test_admin_can_generate_pdf
      * @return void
      */
@@ -122,15 +201,15 @@ class InvoiceTest extends TestCase
         $response = $this->get('/api/v1/invoices/' . $invoice->id . '/pdf');
 
         $response->assertStatus(200)
-                 ->assertHeader('Content-Type', 'application/pdf')
-                 ->assertHeader('Content-Disposition', 'attachment; filename=invoice-' . $invoice->invoice_number . '.pdf');
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Content-Disposition', 'attachment; filename=invoice-' . $invoice->invoice_number . '.pdf');
     }
 
     /**
      * Summary of test_generate_pdf_success
      * @return void
      */
-     public function test_generate_pdf_success()
+    public function test_generate_pdf_success()
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $client = Client::factory()->create();
@@ -145,8 +224,8 @@ class InvoiceTest extends TestCase
         $response = $this->getJson("/api/v1/invoices/{$invoice->id}/pdf");
 
         $response->assertStatus(200)
-                 ->assertHeader('Content-Type', 'application/pdf')
-                 ->assertHeader('Content-Disposition', 'attachment; filename=invoice-' . $invoice->invoice_number . '.pdf');
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Content-Disposition', 'attachment; filename=invoice-' . $invoice->invoice_number . '.pdf');
     }
 
     public function test_admin_can_delete_unpaid_invoice()
@@ -162,14 +241,14 @@ class InvoiceTest extends TestCase
         $response = $this->deleteJson("/api/v1/invoices/{$invoice->id}");
 
         $response->assertStatus(200)
-                 ->assertJsonStructure([
-                     'data' => ['id'],
-                     'message'
-                 ])
-                 ->assertJson([
-                     'message' => 'Facture supprimée avec succès',
-                     'data' => ['id' => $invoice->id]
-                 ]);
+            ->assertJsonStructure([
+                'data' => ['id'],
+                'message'
+            ])
+            ->assertJson([
+                'message' => 'Facture supprimée avec succès',
+                'data' => ['id' => $invoice->id]
+            ]);
 
         $this->assertDatabaseMissing('invoices', ['id' => $invoice->id]);
     }
@@ -194,7 +273,7 @@ class InvoiceTest extends TestCase
         $response = $this->deleteJson("/api/v1/invoices/{$invoice->id}");
 
         $response->assertStatus(403)
-                 ->assertJson(['message' => "Vous n'avez pas l'autorisation d'effectuer cette action"]);
+            ->assertJson(['message' => "Vous n'avez pas l'autorisation d'effectuer cette action"]);
     }
 
     public function test_cannot_delete_paid_invoice()
@@ -210,7 +289,6 @@ class InvoiceTest extends TestCase
         $response = $this->deleteJson("/api/v1/invoices/{$invoice->id}");
 
         $response->assertStatus(422)
-                 ->assertJson(['message' => 'Impossible de supprimer une facture déjà payée']);
+            ->assertJson(['message' => 'Impossible de supprimer une facture déjà payée']);
     }
-
 }

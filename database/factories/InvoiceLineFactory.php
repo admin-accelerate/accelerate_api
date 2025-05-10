@@ -18,9 +18,23 @@ class InvoiceLineFactory extends Factory
     public function definition(): array
     {
         return [
-            'invoice_id' => Invoice::factory(),
-            'description' => $this->faker->sentence(),
-            'amount' => $this->faker->randomFloat(2, 10, 500),
+            'invoice_id' => null,
+            'description' => $this->faker->sentence,
+            'quantity' => $this->faker->numberBetween(1, 10),
+            'unit_price' => $this->faker->randomFloat(2, 10, 1000), // Prix unitaire entre 10 et 1000
+
+            /*'total_ht' => function (array $attributes) {
+                return $attributes['quantity'] * $attributes['unit_price'];
+            },
+            'total_ttc' => function (array $attributes) {
+                return $attributes['total_ht'] * 1.2; // Ajout de 20% de TVA
+            },
+            'tax_rate' => 20, // Taux de TVA
+            'tax_amount' => function (array $attributes) {
+                return $attributes['total_ht'] * ($attributes['tax_rate'] / 100);
+            },*/
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 }

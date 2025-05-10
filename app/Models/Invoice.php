@@ -16,8 +16,8 @@ class Invoice extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'total_ht' => 'float',
     ];
+
     public function client()
     {
         return $this->belongsTo(Client::class);
@@ -33,11 +33,12 @@ class Invoice extends Model
         return $this->hasMany(InvoiceLine::class);
     }
 
-    // Recalcul total HT
-    /*public function calculateTotal()
+    // Recalculer total_ht à chaque sauvegarde
+    protected static function boot()
     {
-        $this->total_ht = $this->lines()->sum('amount');
-        $this->save();
-    }*/
-    
+        parent::boot();
+        static::saving(function ($invoice) {
+            $invoice->total_ht = $invoice->lines->sum('total_amount');
+        });
+    }
 }

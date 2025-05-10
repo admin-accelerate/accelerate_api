@@ -14,24 +14,6 @@ class InvoiceResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-    /*public function toArray($request)
-    {
-        return [
-            'id' => $this->id,
-            'client' => new ClientResource($this->client),
-            'invoice_number' => $this->invoice_number,
-            'total_ht' => $this->total_ht,
-            'issue_date' => $this->issue_date->toDateString(),
-            'due_date' => $this->due_date->toDateString(),
-            'lines' => $this->lines->map(fn($line) => 
-                [
-                    'description' => $line->description,
-                    'amount' => $line->amount,
-                ]),
-            'created_at' => $this->created_at->format('d/m/Y'),
-            'updated_at' => $this->updated_at->format('d/m/Y'),
-        ];
-    }*/
 
     public function toArray($request)
     {
@@ -42,6 +24,7 @@ class InvoiceResource extends JsonResource
             'total_ht' => (float) $this->total_ht,
             'issue_date' => $this->formatDate($this->issue_date),
             'due_date' => $this->formatDate($this->due_date),
+            'status' => $this->status,
             'lines' => InvoiceLineResource::collection($this->whenLoaded('lines')),
         ];
     }
@@ -56,5 +39,4 @@ class InvoiceResource extends JsonResource
         // Si c'est une chaîne, convertir en Carbon
         return Carbon::parse($date)->toDateString();
     }
-
 }
