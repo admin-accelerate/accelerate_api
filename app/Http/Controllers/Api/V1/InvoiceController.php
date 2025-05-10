@@ -402,6 +402,11 @@ class InvoiceController extends Controller
                     );
                 }
 
+                // Forcer le recalcul de total_ht après la création des lignes
+                $invoice->total_ht = $invoice->lines()->sum('total_amount');
+                // Déclenche l'événement  
+                $invoice->save();
+
                 // Recharger l'invoice pour refléter le total_ht recalculé
                 $invoice->load(['client', 'lines']);
             });
