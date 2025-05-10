@@ -21,31 +21,6 @@ class InvoiceTest extends TestCase
      * Summary of test_admin_can_create_invoice
      * @return void
      */
-    /*public function test_admin_can_create_invoice()
-    {
-        $admin = User::factory()->create(['role' => 'admin']);
-        $client = Client::factory()->create();
-        Sanctum::actingAs($admin);
-
-        $response = $this->postJson('/api/v1/invoices', [
-            'client_id' => $client->id,
-            'issue_date' => '2025-05-01',
-            'due_date' => '2025-05-15',
-            'lines' => [
-                ['description' => 'Service A', 'amount' => 100.00],
-                ['description' => 'Service B', 'amount' => 200.00],
-            ],
-        ]);
-
-        $response->assertStatus(201)
-                 ->assertJsonStructure(['data' => ['id', 'client', 'invoice_number', 'total_ht', 'lines']])
-                 ->assertJsonFragment(['total_ht' => 300.00]);
-    }*/
-
-    /**
-     * Summary of test_admin_can_create_invoice
-     * @return void
-     */
     public function test_admin_can_create_invoice()
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -88,7 +63,19 @@ class InvoiceTest extends TestCase
                 ],
                 'message',
             ])
-            ->assertJsonFragment(['total_ht' => 200.00]); // (2 * 50) + (1 * 100) = 200
+            ->assertJsonFragment(['total_ht' => 200.00]);
+    }
+
+
+    /**
+     * Summary of test_invoice_number_is_unique
+     * @return void
+     */
+    public function test_invoice_numbers_are_unique()
+    {
+        $this->artisan('db:seed --class=InvoiceSeeder');
+        $invoices = Invoice::all();
+        $this->assertEquals($invoices->count(), $invoices->unique('invoice_number')->count());
     }
 
 
