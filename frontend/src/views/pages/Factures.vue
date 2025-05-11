@@ -1,422 +1,636 @@
 <template>
-    <b-row>
-      <b-col sm="12">
-        <b-card no-body class="card">
-          <div class="card-header d-flex justify-content-between flex-wrap">
-            <div class="header-title">
-              <h4 class="card-title mb-0"> {{ isListe? listTitle: formTitle }} </h4>
-            </div>
-            <div class="d-flex align-items-center gap-3">
-              <a v-if="isListe" href="#" class="text-center btn btn-primary d-flex gap-2" @click="isListe=false">
-                <svg width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                Nouvelle Facture
-              </a>
+  <div v-if="isLoading" class="loading-overlay">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+  </div>
 
-              <a v-if="!isListe" href="#" class="text-center btn btn-primary d-flex gap-2" @click="isListe=true">
-                <i class="fa-solid fa-list"> Liste des factures </i>
-              </a>
-              
-
-              <!-- <a href="#" class="text-center btn btn-primary d-flex gap-2" data-bs-toggle="modal" data-bs-target="#new-role">
-                <svg width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                New Role
-              </a> -->
-            </div>
+  <b-row v-if="!isPreviexFacture">
+    <b-col sm="12">
+      <b-card no-body class="card">
+        <div class="card-header d-flex justify-content-between flex-wrap">
+          <div class="header-title">
+            <h4 class="card-title mb-0">{{ isliste ? listTitle : formTitle }}</h4>
           </div>
+          <div class="d-flex align-items-center gap-3">
+            <a
+              v-if="isliste"
+              href="#"
+              class="text-center btn btn-primary d-flex gap-2"
+              @click="isliste = false"
+            >
+              <icon-component type="solid" icon-name="file-invoice"></icon-component>
+              Nouvelle facture
+            </a>
 
-
-          <div class="card-body px-0" v-if="isListe">
-            <div class="table-responsive">
-              <table id="user-list-table" class="table table-striped hover" role="grid" data-toggle="data-table">
-                <thead>
-                  <tr class="ligth">
-                    <th>Image</th> 
-                    <th>Référence</th>
-                    <th>Contact</th>
-                    <th>Email</th>
-                    <th>Pays</th>
-                    <th>Status</th>
-                    <th>Societe</th>
-                    <th>Date d'adhésion</th>
-                    <th style="min-width: 100px">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <table-widget :list="tableData" />
-                </tbody>
-              </table>
-            </div>
+            <a
+              v-if="!isliste"
+              href="#"
+              class="text-center btn btn-primary d-flex gap-2"
+              @click="isliste = true"
+            >
+              <icon-component type="solid" icon-name="adjustment"></icon-component>
+              Liste des factures
+            </a>
           </div>
-          <!-- tableau liste facture -->
+        </div>
 
-          <div class="card">
-            <div class="card-body">
-              <form :class="`row g-3 needs-validation ${valid ? 'was-validated' : ''}`" novalidate="" @submit.prevent="formSubmit">
-                <div class="col-md-6 position-relative">
-                  <label for="validationTooltip01" class="form-label">Désignation</label>
-                  <input type="text" class="form-control" id="validationTooltip01" placeholder="Désignation" required="" />
-                  <div class="valid-tooltip">Looks good!</div>
-                </div>
-                <div class="col-md-6 position-relative">
-                  <label for="validationTooltip02" class="form-label">Last name</label>
-                  <input type="text" class="form-control" id="validationTooltip02" value="Otto" required="" />
-                  <div class="valid-tooltip">Looks good!</div>
-                </div>
-                <div class="col-md-6 position-relative">
-                  <label for="validationTooltipUsername" class="form-label">Username</label>
-                  <div class="input-group has-validation">
-                    <span class="input-group-text" id="validationTooltipUsernamePrepend">@</span>
-                    <input type="text" class="form-control" id="validationTooltipUsername" aria-describedby="validationTooltipUsernamePrepend" required="" />
-                    <div class="invalid-tooltip">Please choose a unique and valid username.</div>
-                  </div>
-                </div>
-                <div class="col-md-6 position-relative">
-                  <label for="validationTooltip03" class="form-label">City</label>
-                  <input type="text" class="form-control" id="validationTooltip03" required="" />
-                  <div class="invalid-tooltip">Please provide a valid city.</div>
-                </div>
-                <div class="col-md-6 position-relative">
-                  <label for="validationTooltip04" class="form-label">State</label>
-                  <select class="form-select" id="validationTooltip04" required="">
-                    <option selected="" disabled="" value="">Choose...</option>
-                    <option>...</option>
-                  </select>
-                  <div class="invalid-tooltip">Please select a valid state.</div>
-                </div>
-                <div class="col-md-6 position-relative">
-                  <label for="validationTooltip05" class="form-label">Zip</label>
-                  <input type="text" class="form-control" id="validationTooltip05" required="" />
-                  <div class="invalid-tooltip">Please provide a valid zip.</div>
-                </div>
-                <div class="col-12">
-                  <button class="btn btn-danger" type="reset" @click="resetForm">Reset</button>
-                  <button class="btn btn-primary ms-3" type="submit">Submit form</button>
-                </div>
-              </form>
-            </div>
+        <div class="card-body px-0" v-if="isliste">
+          <div class="table-responsive">
+            <table
+              id="user-list-table"
+              class="table table-striped hover"
+              role="grid"
+              data-toggle="data-table"
+            >
+              <thead>
+                <tr class="ligth">
+                  <th></th>
+                  <th>référence</th>
+                  <th>Client</th>
+                  <th>Total HT</th>
+                  <th>Date émission</th>
+                  <th>Date échéance</th>
+                  <th style="min-width: 100px">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- <table-widget :list="tableData" /> -->
+                <tr v-for="(item, index) in tableData" :key="index">
+                  <td>{{ index + 1 }}</td>
+                  <td>{{ item.invoice_number }}</td>
+                  <td>{{ item.client.name }}</td>
+                  <td>{{ item.total_ht }}</td>
+                  <td>{{ returnFormatedDate(item.issue_date) }}</td>
+                  <td>{{ returnFormatedDate(item.due_date) }}</td>
+                  <td>
+                    <div class="flex align-items-center list-user-action">
+                      <a
+                        @click="getCurrentFacture('preview', item.id)"
+                        title="Consulter la facture"
+                        class="btn btn-sm btn-icon btn-success mx-1"
+                        href="#"
+                      >
+                        <span class="btn-inner">
+                          <icon-component type="outlined" icon-name="eye" />
+                        </span>
+                      </a>
+
+                      <a
+                        @click="getCurrentFacture('edit', item.id)"
+                        title="Modifier la facture"
+                        class="btn btn-sm btn-icon btn-warning mx-1"
+                        href="#"
+                      >
+                        <span class="btn-inner">
+                          <icon-component type="outlined" icon-name="pencil-alt" />
+                        </span>
+                      </a>
+                      <a
+                        @click="getCurrentFacture('delete', item.id)"
+                        title="Supprimer la facture"
+                        class="btn btn-sm btn-icon btn-danger mx-1"
+                        href="#"
+                      >
+                        <span class="btn-inner">
+                          <icon-component type="outlined" icon-name="trash" />
+                        </span>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <!-- formulaire facture -->
+        </div>
+        <!-- tableau liste factures -->
 
-        </b-card>
-      </b-col>
-    </b-row>
+        <div class="card" v-if="!isliste">
+          <div class="card-body">
+            <form
+              :class="`row g-3 needs-validation ${valid ? 'was-validated' : ''}`"
+              novalidate=""
+              @submit.prevent="formSubmit"
+            >
+              <div class="col-md-6 position-relative">
+                <label for="validationTooltip01" class="form-label">Liste des clients</label>
+                <Multiselect
+                  v-model="selected"
+                  :options="listClients.name"
+                  :value="listClients.id"
+                  placeholder="Sélectionnez un client"
+                  :searchable="true"
+                  :allow-empty="false"
+                />
+                <p>Client : {{ selected }}</p>
+                <div class="invalid-feedback">Veuillez choisir le client.</div>
+              </div>
 
-    <!-- New Permission modal -->
-    <div class="modal fade" id="new-permission" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropPermissionLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="staticBackdropPermissionLabel">Add Permission</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <div class="col-md-6 position-relative">
+                <label for="validationTooltip02" class="form-label">Email</label>
+                <input
+                  type="email"
+                  v-model="form.email"
+                  placeholder="ex: luminem@admin.com"
+                  class="form-control"
+                  id="validationTooltip02"
+                  required=""
+                />
+                <!-- <div class="valid-tooltip">Looks good!</div> -->
+                <div class="invalid-feedback">Veuillez renseigner l'email.</div>
+              </div>
+
+              <div class="col-md-6 position-relative">
+                <label for="validationTooltip03" class="form-label">Telephone</label>
+                <input
+                  type="text"
+                  v-model="form.phone"
+                  class="form-control"
+                  id="validationTooltip03"
+                  placeholder="ex: +229 01 02256 66"
+                  required=""
+                />
+                <!-- <div class="valid-tooltip">Looks good!</div> -->
+                <div class="invalid-feedback">Veuillez renseigner le téléphone.</div>
+              </div>
+
+              <div class="col-md-6 position-relative">
+                <label for="validationTooltip04" class="form-label">Adresse</label>
+                <input
+                  type="text"
+                  v-model="form.address"
+                  class="form-control"
+                  id="validationTooltip04"
+                  placeholder="Adresse"
+                  required=""
+                />
+                <!-- <div class="valid-tooltip">Looks good!</div> -->
+                <div class="invalid-feedback">Veuillez renseigner l'adresse.</div>
+              </div>
+
+              <div class="col-12">
+                <button class="btn btn-danger" type="reset" @click="resetForm">
+                  Annuler
+                </button>
+                <button class="btn btn-primary ms-3" type="submit">Enregistrer</button>
+              </div>
+            </form>
           </div>
-          <div class="modal-body">
-            <div class="form-group">
-              <label class="form-label">Permission title</label>
-              <input type="text" class="form-control" placeholder="Permission Title" />
+        </div>
+        <!-- formulaire d'ajout facture -->
+
+      </b-card>
+    </b-col>
+  </b-row>
+  <!-- facture list and form -->
+
+
+  <b-row v-if="isPreviexFacture">
+    <b-col lg="12">
+      <b-card body-class="rounded">
+        <b-row>
+          <b-col sm="12">
+            <div class="card-header d-flex justify-content-between flex-wrap">
+              <div class="d-flex align-items-center gap-3">
+                <a
+                  href="#"
+                  class="text-center btn btn-primary d-flex gap-2"
+                  @click="isPreviexFacture = false"
+                >
+                  <icon-component type="solid" icon-name="adjustment"></icon-component>
+                  Liste des factures
+                </a>
+              </div>
             </div>
-            <div class="text-start">
-              <button type="button" class="btn btn-primary me-2" data-bs-dismiss="modal">Save</button>
-              <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+
+<br/>
+<br/>
+            <h4 class="mb-2 border-bottom pb-2">Facture: {{currentFacture.invoice_number}}</h4>
+            <h5 class="mb-3">Client: {{currentFacture.client.name}}</h5>
+            
+            <p>Email: {{currentFacture.client.email}}</p>
+            <p>Téléphone: {{currentFacture.client.phone}}</p>
+            <p>Adresse: {{currentFacture.client.address}}</p>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col sm="12 mt-4">
+            <b-table-simple responsive="lg">
+              <b-thead>
+                <b-tr>
+                  <b-th scope="col">Désignation</b-th>
+                  <b-th class="text-center" scope="col">Quantité</b-th>
+                  <b-th class="text-center" scope="col">Prix</b-th>
+                  <b-th class="text-center" scope="col">Totals</b-th>
+                </b-tr>
+              </b-thead>
+              <b-tbody>
+
+               <!-- ligne des produits -->
+                <b-tr v-for="(product,index) in currentFacture.lines" :key="index">
+                  <b-td>
+                    <h6 class="mb-0">Article {{index+1}}</h6>
+                    <p class="mb-0">{{product.description}}</p>
+                  </b-td>
+                  <b-td class="text-center">5</b-td>
+                  <b-td class="text-center">{{currencyFormatter('500000')}}</b-td>
+                  <b-td class="text-center">{{currencyFormatter(product.amount)}}</b-td>
+                </b-tr>
+              <!-- ligne des produits -->
+                
+
+                <b-tr>
+                  <b-td>
+                    <h6 class="mb-0" style="font-weight: bold">Total Hors taxe</h6>
+                  </b-td>
+                  <b-td class="text-center"></b-td>
+                  <b-td class="text-center"></b-td>
+                  <b-td class="text-center">{{currencyFormatter(currentFacture.total_ht)}}</b-td>
+                </b-tr>
+                <b-tr>
+                  <b-td>
+                    <h6 class="mb-0" style="font-weight: bold">Tax 20%</h6>
+                  </b-td>
+                  <b-td class="text-center"></b-td>
+                  <b-td class="text-center"></b-td>
+                  <b-td class="text-center">{{currencyFormatter(currentFacture.total_ht*0.2)}}</b-td>
+                </b-tr>
+                <b-tr>
+                  <b-td>
+                    <h6 class="mb-0" style="font-weight: bold">Réduction 0%</h6>
+                  </b-td>
+                  <b-td class="text-center"></b-td>
+                  <b-td class="text-center"></b-td>
+                  <b-td class="text-center">currencyFormatter(0)</b-td>
+                </b-tr>
+                <b-tr>
+                  <b-td>
+                    <h6 class="mb-0" style="font-weight: bold">Total Net</h6>
+                  </b-td>
+                  <b-td class="text-center"></b-td>
+                  <b-td class="text-center"></b-td>
+                  <b-td class="text-center"><b>{{currencyFormatter(currentFacture.total_ht+(currentFacture.total_ht*0.2))}}</b></b-td>
+                </b-tr>
+              </b-tbody>
+            </b-table-simple>
+          </b-col>
+        </b-row>
+
+        <div class="row">
+          <div class="col-sm-12">
+            <p class="mb-0 mt-4" style="font-weight: bold">
+              <!-- <icon-component type="solid" icon-name="file-invoice"></icon-component> -->
+              Facture à payer au plus tard le <span style="color: red"> {{returnFormatedDate(currentFacture.due_date)}}</span>.
+            </p>
+            <div class="d-flex justify-content-center mt-4">
+              <p>Réalisé le 09/05/2025 par Accelerate-Facturation</p>
+            </div>
+            <div class="d-flex justify-content-center mt-4">
+              <button type="button" class="btn btn-primary">Imprimer</button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-    <!-- New Role modal -->
-    <div class="modal fade" id="new-role" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropRoleLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="staticBackdropRoleLabel">Add Role</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="form-group">
-              <label class="form-label">Role title</label>
-              <input type="text" class="form-control" placeholder="Role Title" />
-            </div>
-            <div>
-              <span>Status</span>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="status" id="status-yes" value="option2" />
-                <label class="form-check-label" for="status-yes"> Yes </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="status" id="status-no" value="option2" />
-                <label class="form-check-label" for="status-no"> No </label>
-              </div>
-            </div>
-            <div class="text-start mt-2">
-              <button type="button" class="btn btn-primary me-2" data-bs-dismiss="modal">Save</button>
-              <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </template>
-  <script>
-  import TableWidget from '@/components/widgets/users/TableWidget.vue'
-  import { required } from '@vuelidate/validators'
-  import { useVuelidate } from '@vuelidate/core'
-  export default {
-    components: {
-      TableWidget
-    },
-    name: 'Clients-list',
-    setup() {
-      const v = useVuelidate()
-      const tableData = [
-        {
-          image: require('@/assets/images/shapes/06.png'),
-          name: 'Anna Sthesia',
-          contact: '(760) 756 7568',
-          email: 'annasthesia@gmail.com',
-          country: 'USA',
-          status: 'Active',
-          company: 'Acme Corporation',
-          date: '2019/12/01',
-          color: 'bg-primary'
-        },
-        {
-          image: require('@/assets/images/shapes/02.png'),
-          name: 'Brock Lee',
-          contact: '+62 5689 458 658',
-          email: 'brocklee@gmail.com',
-          country: 'Indonesia',
-          status: 'Active',
-          company: 'Soylent Corp',
-          date: '2019/12/01',
-          color: 'bg-primary'
-        },
-        {
-          image: require('@/assets/images/shapes/03.png'),
-          name: 'Dan Druff',
-          contact: '+55 6523 456 856',
-          email: 'dandruff@gmail.com',
-          country: 'Brazil',
-          status: 'Pending',
-          company: 'Umbrella Corporation',
-          date: '2019/12/01',
-          color: 'bg-warning'
-        },
-        {
-          image: require('@/assets/images/shapes/04.png'),
-          name: 'Hans Olo',
-          contact: '+91 2586 253 125',
-          email: 'hansolo@gmail.com',
-          country: 'India',
-          status: 'Inactive',
-          company: 'Vehement Capital',
-          date: '2019/12/01',
-          color: 'bg-danger'
-        },
-        {
-          image: require('@/assets/images/shapes/05.png'),
-          name: 'Lynn Guini',
-          contact: '+27 2563 456 589',
-          email: 'lynnguini@gmail.com',
-          country: 'Africa',
-          status: 'Active',
-          company: 'Massive Dynamic',
-          date: '2019/12/01',
-          color: 'bg-primary'
-        },
-        {
-          image: require('@/assets/images/shapes/06.png'),
-          name: 'Eric Shun',
-          contact: '+55 25685 256 589',
-          email: 'ericshun@gmail.com',
-          country: 'Brazil',
-          status: 'Pending',
-          company: 'Globex Corporation',
-          date: '2019/12/01',
-          color: 'bg-warning'
-        },
-        {
-          image: require('@/assets/images/shapes/03.png'),
-          name: 'aaronottix',
-          contact: '(760) 756 7568',
-          email: 'budwiser@ymail.com',
-          country: 'USA',
-          status: 'Hold',
-          company: 'Acme Corporation',
-          date: '2019/12/01',
-          color: 'bg-info'
-        },
-        {
-          image: require('@/assets/images/shapes/05.png'),
-          name: 'Marge Arita',
-          contact: '+27 5625 456 589',
-          email: 'margearita@gmail.com',
-          country: 'Africa',
-          status: 'Complite',
-          company: 'Vehement Capital',
-          date: '2019/12/01',
-          color: 'bg-success'
-        },
-        {
-          image: require('@/assets/images/shapes/02.png'),
-          name: 'Bill Dabear',
-          contact: '+55 2563 456 589',
-          email: 'billdabear@gmail.com',
-          country: 'Brazil',
-          status: 'Active',
-          company: 'Massive Dynamic',
-          date: '2019/12/01',
-          color: 'bg-primary'
-        }
-      ]
-      return {
-        tableData,
-        v
-      }
-    },
-    data() {
-      return {
-        isListe:true,
-        listTitle:'Liste des factures',
-        formTitle:'Ajouter une facture',
+      </b-card>
+    </b-col>
+  </b-row>
+  <!-- facture details view -->
 
-        roles: [
-          {
-            title: 'Admin',
-            status: 'true'
-          },
-          {
-            title: 'Demo Admin',
-            status: 'false'
-          },
-          {
-            title: 'User',
-            status: 'true'
-          }
-        ],
-        rolename: 'Demo User',
-        roleeditname: '',
-        roleid: '',
-        permissions: [
-          {
-            title: 'Role',
-            status: 'true'
-          },
-          {
-            title: 'Role Add',
-            status: 'false'
-          },
-          {
-            title: 'Role List',
-            status: 'true'
-          },
-          {
-            title: 'Permission',
-            status: 'false'
-          },
-          {
-            title: 'Permission Add',
-            status: 'false'
-          },
-          {
-            title: 'Permission List',
-            status: 'true'
-          }
-        ],
-        permissionsname: 'Demo Permission',
-        permissionseditname: '',
-        permissionsid: '',
 
-        valid: false,
-        form: {
-          firstName: '',
-          lastName: '',
-          username: '',
-          city: '',
-          state: '',
-          zip: '',
-          agree: false
-        }
-      }
-   
+</template>
+<script>
+// import TableWidget from '@/components/widgets/users/TableWidget.vue';
+// import {  computed } from 'vue'
+import axios from "axios";
+import { userAuthStore } from "@store/auth";
+import { required } from "@vuelidate/validators";
+import { useVuelidate } from "@vuelidate/core";
+import Swal from "sweetalert2";
+import dayjs from "dayjs";
+import Multiselect from 'vue-multiselect'
+import 'vue-multiselect/dist/vue-multiselect.css'
+
+export default {
+  components: {
+    // TableWidget
+    Multiselect
+  },
+  name: "Clients-list",
+  setup() {
+    // const auth = userAuthStore();
+    // const userToken = computed(() => auth.token);
+    const v = useVuelidate();
+
+    return {
+      v,
+    };
+  },
+  computed: {
+    userToken() {
+      const auth = userAuthStore();
+      return auth.token;
     },
+  },
 
-    methods: {
-      async formSubmit() {
-        this.valid = true
-        const result = await this.v.$validate()
-        if (result) {
-          // this.valid = true
-        }
-      },
-      resetForm() {
-        this.v.$reset()
-        this.valid = false
-      },
+  data() {
+    return {
+      selected:'',
+      tableData: [],
+      isliste: true,
+      isPreviexFacture: false,
+      listTitle: "Liste des factures",
+      formTitle: "Ajouter une facture",
+      action: "add",
+      idFacture: 0,
+      isLoading: false,
 
-      addrole() {
-        const roledata = {
-          title: this.rolename
-        }
-        this.roles.push(roledata)
-      },
-      deleteRole(roleid) {
-        this.roles.splice(roleid, 1)
-      },
-      editrole(title, roleid) {
-        this.roleeditname = title
-        this.roleid = roleid
-      },
-      updaterole() {
-        this.roles[this.roleid].title = this.roleeditname
-      },
-      addpermission() {
-        const permissiondata = {
-          title: this.permissionsname
-        }
-        this.permissions.push(permissiondata)
-      },
-      deletepermission(permissionsid) {
-        this.permissions.splice(permissionsid, 1)
-      },
-      editpermission(title, permissionsid) {
-        this.permissionseditname = title
-        this.permissionsid = permissionsid
-      },
-      updatepermission() {
-        this.permissions[this.permissionsid].title = this.permissionseditname
-      }
-    },
-    validations: {
-     return:{
+      valid: false,
       form: {
-        firstName: {
-          required
+        client_id: "",
+        facture_line: {
+          invoice_id: 0,
+          description: "",
+          qte: 0,
+          amount: 0,
         },
-        lastName: {
-          required
-        },
-        username: {
-          required
-        },
-        city: {
-          required
-        },
-        state: {
-          required
-        },
-        zip: {
-          required
-        },
-        agree: {
-          required
+        total_ht: 0,
+      },
+
+      currentFacture: {},
+      listClients: [],
+    };
+  },
+  methods: {
+    returnFormatedDate(date) {
+      return dayjs(date).format("DD-MM-YYYY");
+    },
+
+    currencyFormatter(amount) {
+      const formatteur = new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'EUR',
+      });
+      
+      return formatteur.format(amount);
+    },
+
+    async formSubmit() {
+      // étape validation formulaire
+      this.valid = true;
+      const result = await this.v.$validate();
+
+      if (result) {
+        // console.log(this.action)
+        if (this.action === "add") {
+          this.addClient();
+        }
+        if (this.action === "edit") {
+          this.editClient();
         }
       }
-     } 
-    }
-    
-  }
-  </script>
-  
+    },
+
+    resetForm() {
+      this.v.$reset();
+      this.valid = false;
+
+      this.form.name = "";
+      this.form.email = "";
+      this.form.phone = "";
+      this.form.address = "";
+
+      this.isliste = true;
+      this.listTitle = "Liste des factures";
+      this.formTitle = "Ajouter une facture";
+      this.action = "add";
+      this.idFacture = 0;
+    },
+
+    async addClient() {
+      this.isLoading = true;
+      try {
+        await axios.get("/sanctum/csrf-cookie");
+        const response = await axios.post(
+          "http://localhost:8000/api/v1/invoices",
+          this.form,
+          {
+            headers: {
+              Authorization: `Bearer ${this.userToken}`,
+            },
+          }
+        );
+        if (response.status === 201 || response.statusText === "Created") {
+          Swal.fire("Enregistrement!", response.data.message + " 🎉", "success");
+          this.resetForm();
+          this.getListFactures(this.userToken);
+        } else {
+          let errorGlobal = [];
+          errorGlobal = response.data.errorsList;
+
+          let errorMessage = "";
+          if (errorGlobal.email && errorGlobal.email.length > 0) {
+            errorMessage = "Cet email est déjà utilisé!! Veuillez choisir un autre.";
+          } else {
+            errorMessage = "Une erreur est survenue lors de l'enregistrement";
+          }
+
+          Swal.fire("Erreur!", errorMessage, "error");
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async getListFactures() {
+      this.isLoading = true;
+      try {
+        await axios.get("/sanctum/csrf-cookie");
+        const response = await axios.get("http://localhost:8000/api/v1/invoices", {
+          headers: {
+            Authorization: `Bearer ${this.userToken}`,
+          },
+        });
+        console.log(response.data.data);
+        this.tableData = response.data.data;
+      } catch (error) {
+        console.error("Erreur lors de la récupération des factures :", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    getCurrentFacture(action, idFacture) {
+      this.idFacture = idFacture;
+      if (action === "edit") {
+        this.action = "edit";
+        this.isliste = false;
+        this.formTitle = "Modifier le client";
+        const currentClient = this.tableData;
+        // this.form = currentClient.find(client => client.id === idFacture);
+        this.form = structuredClone(
+          currentClient.find((client) => client.id === idFacture)
+        );
+
+        // console.log(this.form);
+      }
+
+      if (action === "delete") {
+        this.action = "delete";
+        const currentClient = structuredClone(
+          this.tableData.find((client) => client.id === idFacture)
+        );
+        Swal.fire({
+          title:
+            "Êtes-vous sûr de vouloir supprimer le client " + currentClient.name + " ?",
+          text: "Cette action est irréversible !",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33",
+          cancelButtonColor: "#3085d6",
+          confirmButtonText: "Oui, supprimer",
+          cancelButtonText: "Annuler",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.deleteClient(idFacture);
+          }
+        });
+      }
+
+      if (action === "preview") {
+        this.action = "preview";
+        this.isPreviexFacture = true;
+        this.isliste = true;
+        this.currentFacture = structuredClone(
+          this.tableData.find((facture) => facture.id === idFacture)
+        );
+        console.log(this.currentFacture);
+      }
+    },
+
+    async editClient() {
+      this.isLoading = true;
+      try {
+        await axios.get("/sanctum/csrf-cookie");
+        const response = await axios.put(
+          "http://localhost:8000/api/v1/clients/" + this.idFacture,
+          this.form,
+          {
+            headers: {
+              Authorization: `Bearer ${this.userToken}`,
+            },
+          }
+        );
+
+        if (response.status === 201 || response.statusText === "Created") {
+          Swal.fire("Modification!", response.data.message + " 🎉", "success");
+          this.resetForm();
+          this.getListFactures(this.userToken);
+        } else {
+          const errorMessage = "Une erreur est survenue lors de la mise à jour";
+          Swal.fire("Erreur!", errorMessage, "error");
+        }
+      } catch (error) {
+        console.log(error);
+        // this.isliste = true;
+        // this.listTitle='Liste des clients';
+        // this.formTitle='Ajouter un client';
+        // this.action='add';
+        // this.idFacture=0;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async deleteClient(id) {
+      this.isLoading = true;
+      try {
+        await axios.get("/sanctum/csrf-cookie");
+        const response = await axios.delete(
+          `http://localhost:8000/api/v1/clients/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${this.userToken}`,
+            },
+          }
+        );
+
+        if (response.status === 200 || response.statusText === "OK") {
+          Swal.fire(
+            "Supprimé !",
+            response.data.message || "Client supprimé avec succès.",
+            "success"
+          );
+          this.getListFactures();
+        } else {
+          Swal.fire("Erreur", "Échec de la suppression du client.", "error");
+        }
+      } catch (error) {
+        console.error(error);
+        Swal.fire("Erreur", "Une erreur est survenue lors de la suppression.", "error");
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async getListClient(){
+        this.isLoading = true;
+        try{
+          await axios.get('/sanctum/csrf-cookie');
+          const response = await axios.get('http://localhost:8000/api/v1/clients', {
+            headers: {
+              Authorization: `Bearer ${this.userToken}`
+            }
+          });
+                    
+          this.listClients = response.data.data; 
+          // console.log(tableData.value)
+
+        }catch (error) {
+          console.error("Erreur lors de la récupération des clients :", error);
+        }finally{
+          this.isLoading = false;
+        }
+       
+      },
+
+    validations: {
+      return: {
+        form: {
+          name: {
+            required,
+          },
+          email: {
+            required,
+          },
+          phone: {
+            required,
+          },
+          adresse: {
+            required,
+          },
+        },
+      },
+    },
+  },
+  mounted() {
+    this.getListFactures();
+    this.getListClient();
+  },
+};
+</script>
+
+<style scoped>
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+</style>

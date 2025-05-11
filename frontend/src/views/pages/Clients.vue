@@ -1,57 +1,132 @@
-<template>
+  <template>
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
+      </div>
+    </div>
+
     <b-row>
       <b-col sm="12">
         <b-card no-body class="card">
           <div class="card-header d-flex justify-content-between flex-wrap">
             <div class="header-title">
-              <h4 class="card-title mb-0">Liste des clients</h4>
+              <h4 class="card-title mb-0"> {{ isliste? listTitle: formTitle }}</h4>
             </div>
-            <div class="d-flex align-items-center gap-3">
-              <a href="#" class="text-center btn btn-primary d-flex gap-2" data-bs-toggle="modal" data-bs-target="#new-permission">
-                <svg width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
+            <div  class="d-flex align-items-center gap-3" >
+              <a v-if="isliste" href="#" class="text-center btn btn-primary d-flex gap-2" @click="isliste=false">
+                <icon-component type="solid" icon-name="user-add"></icon-component>  
                 Nouveau client
               </a>
 
-              <!-- <a href="#" class="text-center btn btn-primary d-flex gap-2" data-bs-toggle="modal" data-bs-target="#new-role">
-                <svg width="20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                New Role
-              </a> -->
+              <a v-if="!isliste" href="#" class="text-center btn btn-primary d-flex gap-2" @click="isliste=true">
+                <icon-component type="solid" icon-name="adjustment"></icon-component>
+                Liste des clients
+              </a>
             </div>
+
+
           </div>
 
 
-          <div class="card-body px-0">
+          <div class="card-body px-0" v-if="isliste">
             <div class="table-responsive">
               <table id="user-list-table" class="table table-striped hover" role="grid" data-toggle="data-table">
                 <thead>
                   <tr class="ligth">
-                    <th>Profile</th>
-                    <th>Nom & présoms</th>
-                    <th>Contact</th>
+                    <th></th>
+                    <th>Désignation</th>
                     <th>Email</th>
-                    <th>Pays</th>
-                    <th>Status</th>
-                    <th>Societe</th>
-                    <th>Date d'adhésion</th>
+                    <th>Telephone</th>
+                    <th>Adresse</th>
                     <th style="min-width: 100px">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <table-widget :list="tableData" />
+                  <!-- <table-widget :list="tableData" /> -->
+                  <tr v-for="(item, index) in tableData" :key="index">
+                    <td>{{index+1}}</td>
+                    <td> {{ item.name}} </td>  
+                    <td> {{ item.email}} </td>  
+                    <td> {{ item.phone}} </td>  
+                    <td> {{ item.address}} </td>  
+                    <td>
+                      <div class="flex align-items-center list-user-action">
+                        <!-- <a class="btn btn-sm btn-icon btn-success mx-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Add" href="#">
+                          <span class="btn-inner">
+                            <icon-component type="outlined" icon-name="user-add" />
+                          </span>
+                        </a> -->
+                        <a @click="getCurrentClient('edit',item.id)" title="Modifier le client" class="btn btn-sm btn-icon btn-warning mx-1"  href="#">
+                          <span class="btn-inner">
+                            <icon-component type="outlined" icon-name="pencil-alt" />
+                          </span>
+                        </a>
+                        <a @click="getCurrentClient('delete',item.id)" title="Supprimer le client" class="btn btn-sm btn-icon btn-danger mx-1"  href="#">
+                          <span class="btn-inner">
+                            <icon-component type="outlined" icon-name="trash" />
+                          </span>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
           <!-- tableau liste clients -->
+           
+          
+          <div class="card" v-if="!isliste">
+            <div class="card-body">
+              
+              <form :class="`row g-3 needs-validation ${valid ? 'was-validated' : ''}`" novalidate="" @submit.prevent="formSubmit">
+                <div class="col-md-6 position-relative"> 
+                  <label for="validationTooltip01" class="form-label">Désignation</label>
+                  <input type="text" v-model="form.name" class="form-control" id="validationTooltip01" placeholder="Désignation" required="" />
+                  <!-- <div class="valid-tooltip">Looks good!</div> -->
+                  <div class="invalid-feedback">Veuillez renseigner la désignation.</div>
+                </div>
+                 
+                <div class="col-md-6 position-relative">
+                  <label for="validationTooltip02" class="form-label">Email</label>
+                  <input type="email" v-model="form.email" placeholder="ex: luminem@admin.com" class="form-control" id="validationTooltip02" required="" />
+                  <!-- <div class="valid-tooltip">Looks good!</div> -->
+                  <div class="invalid-feedback">Veuillez renseigner l'email.</div>
+
+                </div>
+                
+                <div class="col-md-6 position-relative">
+                  <label for="validationTooltip03" class="form-label">Telephone</label>
+                  <input type="text" v-model="form.phone" class="form-control" id="validationTooltip03" placeholder="ex: +229 01 02256 66" required="" />
+                  <!-- <div class="valid-tooltip">Looks good!</div> -->
+                  <div class="invalid-feedback">Veuillez renseigner le téléphone.</div>
+
+                </div>
+
+                <div class="col-md-6 position-relative">
+                  <label for="validationTooltip04" class="form-label">Adresse</label>
+                  <input type="text" v-model="form.address" class="form-control" id="validationTooltip04" placeholder="Adresse" required="" />
+                  <!-- <div class="valid-tooltip">Looks good!</div> -->
+                  <div class="invalid-feedback">Veuillez renseigner l'adresse.</div>
+ 
+                </div>
+
+                <div class="col-12">
+                  <button class="btn btn-danger" type="reset" @click="resetForm">Annuler</button>
+                  <button class="btn btn-primary ms-3" type="submit">Enregistrer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <!-- formulaire d'ajout client -->
+
+
+
         </b-card>
       </b-col>
     </b-row>
     <!-- New Permission modal -->
-    <div class="modal fade" id="new-permission" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropPermissionLabel" aria-hidden="true">
+    <!-- <div class="modal fade" id="new-permission" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropPermissionLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -70,9 +145,9 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
     <!-- New Role modal -->
-    <div class="modal fade" id="new-role" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropRoleLabel" aria-hidden="true">
+    <!-- <div class="modal fade" id="new-role" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropRoleLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -102,206 +177,279 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </template>
   <script>
-  import TableWidget from '@/components/widgets/users/TableWidget.vue'
+  // import TableWidget from '@/components/widgets/users/TableWidget.vue';
+  // import {  computed } from 'vue'
+  import axios from 'axios';
+  import {userAuthStore} from '@store/auth';
+   import { required } from '@vuelidate/validators'
+  import { useVuelidate } from '@vuelidate/core'
+  import Swal from 'sweetalert2';
+
   export default {
     components: {
-      TableWidget
+      // TableWidget
     },
     name: 'Clients-list',
     setup() {
-      const tableData = [
-        {
-          image: require('@/assets/images/shapes/06.png'),
-          name: 'Anna Sthesia',
-          contact: '(760) 756 7568',
-          email: 'annasthesia@gmail.com',
-          country: 'USA',
-          status: 'Active',
-          company: 'Acme Corporation',
-          date: '2019/12/01',
-          color: 'bg-primary'
-        },
-        {
-          image: require('@/assets/images/shapes/02.png'),
-          name: 'Brock Lee',
-          contact: '+62 5689 458 658',
-          email: 'brocklee@gmail.com',
-          country: 'Indonesia',
-          status: 'Active',
-          company: 'Soylent Corp',
-          date: '2019/12/01',
-          color: 'bg-primary'
-        },
-        {
-          image: require('@/assets/images/shapes/03.png'),
-          name: 'Dan Druff',
-          contact: '+55 6523 456 856',
-          email: 'dandruff@gmail.com',
-          country: 'Brazil',
-          status: 'Pending',
-          company: 'Umbrella Corporation',
-          date: '2019/12/01',
-          color: 'bg-warning'
-        },
-        {
-          image: require('@/assets/images/shapes/04.png'),
-          name: 'Hans Olo',
-          contact: '+91 2586 253 125',
-          email: 'hansolo@gmail.com',
-          country: 'India',
-          status: 'Inactive',
-          company: 'Vehement Capital',
-          date: '2019/12/01',
-          color: 'bg-danger'
-        },
-        {
-          image: require('@/assets/images/shapes/05.png'),
-          name: 'Lynn Guini',
-          contact: '+27 2563 456 589',
-          email: 'lynnguini@gmail.com',
-          country: 'Africa',
-          status: 'Active',
-          company: 'Massive Dynamic',
-          date: '2019/12/01',
-          color: 'bg-primary'
-        },
-        {
-          image: require('@/assets/images/shapes/06.png'),
-          name: 'Eric Shun',
-          contact: '+55 25685 256 589',
-          email: 'ericshun@gmail.com',
-          country: 'Brazil',
-          status: 'Pending',
-          company: 'Globex Corporation',
-          date: '2019/12/01',
-          color: 'bg-warning'
-        },
-        {
-          image: require('@/assets/images/shapes/03.png'),
-          name: 'aaronottix',
-          contact: '(760) 756 7568',
-          email: 'budwiser@ymail.com',
-          country: 'USA',
-          status: 'Hold',
-          company: 'Acme Corporation',
-          date: '2019/12/01',
-          color: 'bg-info'
-        },
-        {
-          image: require('@/assets/images/shapes/05.png'),
-          name: 'Marge Arita',
-          contact: '+27 5625 456 589',
-          email: 'margearita@gmail.com',
-          country: 'Africa',
-          status: 'Complite',
-          company: 'Vehement Capital',
-          date: '2019/12/01',
-          color: 'bg-success'
-        },
-        {
-          image: require('@/assets/images/shapes/02.png'),
-          name: 'Bill Dabear',
-          contact: '+55 2563 456 589',
-          email: 'billdabear@gmail.com',
-          country: 'Brazil',
-          status: 'Active',
-          company: 'Massive Dynamic',
-          date: '2019/12/01',
-          color: 'bg-primary'
-        }
-      ]
+      // const auth = userAuthStore();
+      // const userToken = computed(() => auth.token);
+      const v = useVuelidate()
+    
       return {
-        tableData
+        v
       }
     },
+    computed:{
+      userToken() {
+        const auth = userAuthStore();
+        return auth.token;
+      }
+    },
+
     data() {
       return {
-        roles: [
-          {
-            title: 'Admin',
-            status: 'true'
-          },
-          {
-            title: 'Demo Admin',
-            status: 'false'
-          },
-          {
-            title: 'User',
-            status: 'true'
-          }
-        ],
-        rolename: 'Demo User',
-        roleeditname: '',
-        roleid: '',
-        permissions: [
-          {
-            title: 'Role',
-            status: 'true'
-          },
-          {
-            title: 'Role Add',
-            status: 'false'
-          },
-          {
-            title: 'Role List',
-            status: 'true'
-          },
-          {
-            title: 'Permission',
-            status: 'false'
-          },
-          {
-            title: 'Permission Add',
-            status: 'false'
-          },
-          {
-            title: 'Permission List',
-            status: 'true'
-          }
-        ],
-        permissionsname: 'Demo Permission',
-        permissionseditname: '',
-        permissionsid: ''
+        tableData: [],
+        isliste:true,
+        listTitle:'Liste des clients',
+        formTitle:'Ajouter un client',
+        action:'add',
+        idClient:0,
+        isLoading: false,
+
+        valid: false,
+        form: {
+          name: '',
+          email: '',
+          phone: '',
+          address: ''
+        }
       }
    
     },
     methods: {
-      addrole() {
-        const roledata = {
-          title: this.rolename
+      async formSubmit() {
+        // étape validation formulaire
+        this.valid = true
+        const result = await this.v.$validate()
+        
+        if (result) {
+          // console.log(this.action)
+          if(this.action==='add'){
+            this.addClient();
+          }
+          if(this.action==='edit'){
+            this.editClient();
+          }
+         
         }
-        this.roles.push(roledata)
       },
-      deleteRole(roleid) {
-        this.roles.splice(roleid, 1)
+
+      resetForm() {
+        this.v.$reset()
+        this.valid = false
+        
+        this.form.name= '';
+        this.form.email= '';
+        this.form.phone= '';
+        this.form.address= '';
+
+        this.isliste = true;
+        this.listTitle='Liste des clients';
+        this.formTitle='Ajouter un client';
+        this.action='add';
+        this.idClient=0;
       },
-      editrole(title, roleid) {
-        this.roleeditname = title
-        this.roleid = roleid
-      },
-      updaterole() {
-        this.roles[this.roleid].title = this.roleeditname
-      },
-      addpermission() {
-        const permissiondata = {
-          title: this.permissionsname
+
+      async addClient(){
+        this.isLoading = true;
+        try{
+          
+          await axios.get('/sanctum/csrf-cookie');
+          const response = await axios.post('http://localhost:8000/api/v1/clients', this.form,{
+            headers: {
+              Authorization: `Bearer ${this.userToken}`
+            }
+          });
+         if(response.status === 201 || response.statusText === "Created"){    
+            Swal.fire('Enregistrement!', response.data.message+' 🎉', 'success');
+            this.resetForm();
+            this.getListClient(this.userToken)
+         }else{
+          let errorGlobal = [];
+          errorGlobal = response.data.errorsList;
+          
+          let errorMessage = '';
+          if(errorGlobal.email && errorGlobal.email.length > 0){
+            errorMessage = 'Cet email est déjà utilisé!! Veuillez choisir un autre.';
+          }else{
+            errorMessage = 'Une erreur est survenue lors de l\'enregistrement';          
+          }
+ 
+          Swal.fire('Erreur!', errorMessage, 'error');
+         }
+        }catch(error){
+          console.log(error);
+        }finally{
+          this.isLoading = false;
         }
-        this.permissions.push(permissiondata)
       },
-      deletepermission(permissionsid) {
-        this.permissions.splice(permissionsid, 1)
+
+      async getListClient(){
+        this.isLoading = true;
+        try{
+          await axios.get('/sanctum/csrf-cookie');
+          const response = await axios.get('http://localhost:8000/api/v1/clients', {
+            headers: {
+              Authorization: `Bearer ${this.userToken}`
+            }
+          });
+                    
+          this.tableData = response.data.data; 
+          // console.log(tableData.value)
+
+        }catch (error) {
+          console.error("Erreur lors de la récupération des clients :", error);
+        }finally{
+          this.isLoading = false;
+        }
+       
       },
-      editpermission(title, permissionsid) {
-        this.permissionseditname = title
-        this.permissionsid = permissionsid
+
+      getCurrentClient(action,idCLient){
+        this.idClient = idCLient;
+        if(action === 'edit'){
+            this.action = 'edit';
+            this.isliste = false;
+            this.formTitle = 'Modifier le client';
+            const currentClient = this.tableData;
+            // this.form = currentClient.find(client => client.id === idCLient);
+            this.form = structuredClone(currentClient.find(client => client.id === idCLient));
+
+            // console.log(this.form);
+        }
+
+        if(action === 'delete'){
+          this.action = 'delete';
+          const currentClient = structuredClone(this.tableData.find(client => client.id === idCLient));
+          Swal.fire({
+            title: 'Êtes-vous sûr de vouloir supprimer le client '+currentClient.name+' ?',
+            text: "Cette action est irréversible !",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              this.deleteClient(idCLient);
+            }
+          });
+
+        }
+        
       },
-      updatepermission() {
-        this.permissions[this.permissionsid].title = this.permissionseditname
-      }
+
+      async editClient(){
+        this.isLoading = true;
+        try{
+          await axios.get('/sanctum/csrf-cookie');
+          const response = await axios.put('http://localhost:8000/api/v1/clients/'+this.idClient, this.form,{
+            headers: {
+              Authorization: `Bearer ${this.userToken}`
+            }
+          });
+          
+          if(response.status === 201 || response.statusText === "Created"){    
+            Swal.fire('Modification!', response.data.message+' 🎉', 'success');
+            this.resetForm();
+            this.getListClient(this.userToken)
+          }else{
+             
+             const errorMessage = 'Une erreur est survenue lors de la mise à jour';           
+            Swal.fire('Erreur!', errorMessage, 'error');
+
+          }   
+        }catch(error){
+          console.log(error);
+          // this.isliste = true;
+          // this.listTitle='Liste des clients';
+          // this.formTitle='Ajouter un client';
+          // this.action='add';
+          // this.idClient=0;
+        }finally{
+          this.isLoading = false;
+        }
+
+      },
+
+      async deleteClient(id) {
+        this.isLoading = true;
+        try {
+          await axios.get('/sanctum/csrf-cookie');
+          const response = await axios.delete(`http://localhost:8000/api/v1/clients/${id}`, {
+            headers: {
+              Authorization: `Bearer ${this.userToken}`
+            }
+          });
+
+          if (response.status === 200 || response.statusText === "OK") {
+            Swal.fire('Supprimé !', response.data.message || 'Client supprimé avec succès.', 'success');
+            this.getListClient();
+          } else {
+            Swal.fire('Erreur', 'Échec de la suppression du client.', 'error');
+          }
+        } catch (error) {
+          console.error(error);
+          Swal.fire('Erreur', 'Une erreur est survenue lors de la suppression.', 'error');
+        }finally{
+          this.isLoading = false;
+        }
+      },
+
+    
+      validations: {
+      return:{
+        form: {
+          name: {
+            required
+          },
+          email: {
+            required
+          },
+          phone: {
+            required
+          },
+          adresse: {
+            required
+          }
+        }
+      } 
+      },
+
+    },
+    mounted() {
+      this.getListClient();
     }
   }
-  </script>
+</script>
+
+<style scoped>
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+</style>
   
