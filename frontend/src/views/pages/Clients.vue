@@ -241,7 +241,7 @@
             this.addClient();
           }
           if(this.action==='edit'){
-            this.editClient();
+            this.UpdateClient();
           }
          
         }
@@ -353,7 +353,7 @@
         
       },
 
-      async editClient(){
+      async UpdateClient(){
         this.isLoading = true;
         try{
           await axios.get('/sanctum/csrf-cookie');

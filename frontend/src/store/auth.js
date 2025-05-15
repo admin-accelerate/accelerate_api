@@ -30,8 +30,9 @@ export const userAuthStore = defineStore('auth', {
                 router.push('/dashboard');
 
             } catch (error) {
-                console.error('Connexion échouée:', error.response + ' ' + error.message);
-                // throw error;
+                // console.error('Connexion échouée');
+                console.log(error);
+                throw error;
             }
         },
 

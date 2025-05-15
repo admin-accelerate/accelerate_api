@@ -10,6 +10,8 @@ import {
     createPinia
 } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
+import Toast from 'vue-toastification'
+import 'vue-toastification/dist/index.css'
 
 
 // Library Components
@@ -33,7 +35,7 @@ require('waypoints/lib/noframework.waypoints.min')
 const app = createApp(App)
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate);
-app.use(store).use(router).use(axios).use(pinia)
+app.use(store).use(router).use(axios).use(pinia).use(Toast)
 
 // Library Components
 app.use(VueSweetalert2)

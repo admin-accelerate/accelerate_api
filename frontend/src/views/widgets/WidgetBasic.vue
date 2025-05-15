@@ -151,6 +151,7 @@
           </div>
         </b-card>
       </b-col>
+     
       <b-col class="col-lg-3 col-md-6">
         <b-card>
           <div class="d-flex justify-content-between align-items-center">
@@ -219,6 +220,7 @@
           </div>
         </b-card>
       </b-col>
+      
       <b-col class="col-lg-3 col-md-6">
         <b-card class="border-bottom border-4 border-0 border-primary">
           <div class="d-flex justify-content-between align-items-center">
